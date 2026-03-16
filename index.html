@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer" />
-    <title>Silent Tech | API</title>
+    <title>Silent Tech | Developer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -22,25 +22,18 @@
             background-image: 
                 linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
                 linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-            mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
-            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
+            mask-image: radial-gradient(circle at top center, black 40%, transparent 100%);
+            -webkit-mask-image: radial-gradient(circle at top center, black 40%, transparent 100%);
         }
 
         /* macOS Style Window Structure */
         .mac-window {
-            background: #151515;
-            border: 1px solid #2a2a2a;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
-            transition: all 0.3s ease;
+            background: #151515; border: 1px solid #2a2a2a; border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); overflow: hidden;
         }
         .mac-header {
-            background: #1e1e1e;
-            border-bottom: 1px solid #2a2a2a;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
+            background: #1e1e1e; border-bottom: 1px solid #2a2a2a;
+            padding: 12px 16px; display: flex; align-items: center;
         }
         .mac-dots { display: flex; gap: 6px; }
         .dot { width: 12px; height: 12px; border-radius: 50%; }
@@ -49,169 +42,312 @@
         .dot-green { background-color: #27c93f; }
         .mac-title { flex: 1; text-align: center; font-size: 12px; color: #888; font-weight: 500; margin-right: 48px;}
 
-        /* Smooth Inputs */
+        /* Inputs & Buttons */
         .input-clean {
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            color: #fff;
+            background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .input-clean:focus {
-            outline: none;
-            border-color: #666;
-            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
-        }
+        .input-clean:focus { outline: none; border-color: #666; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1); }
+        .nav-btn { color: #888; transition: all 0.2s; padding: 6px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; }
+        .nav-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .nav-btn.active { color: #fff; background: #2a2a2a; border: 1px solid #333; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
 
-        /* Subtle Smooth Animations */
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        /* Animations & Utils */
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        /* Code Font */
         .code-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Progress Bar */
+        .progress-bg { background: #222; border-radius: 99px; height: 8px; width: 100%; overflow: hidden; }
+        .progress-fill { background: #ececec; height: 100%; border-radius: 99px; transition: width 0.5s ease; }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col items-center py-10 px-4 md:px-8">
+<body class="antialiased min-h-screen flex flex-col">
 
     <div class="bg-grid"></div>
 
-    <!-- Minimal Header -->
-    <div class="max-w-5xl w-full mb-10 text-center">
-        <h1 class="text-3xl font-semibold text-white tracking-tight mb-2">Silent Tech</h1>
-        <p class="text-gray-400 text-sm font-medium">Enterprise Image Routing & Delivery API</p>
-    </div>
-
-    <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-8 z-10">
-        
-        <!-- Left Panel: Controls -->
-        <div class="md:col-span-5 flex flex-col gap-6">
-            <div class="mac-window">
-                <div class="mac-header">
-                    <div class="mac-dots">
-                        <div class="dot dot-red"></div>
-                        <div class="dot dot-yellow"></div>
-                        <div class="dot dot-green"></div>
-                    </div>
-                    <div class="mac-title">request_config.json</div>
+    <!-- Top Navigation & Global Stats -->
+    <nav class="w-full border-b border-[#2a2a2a] bg-[#0c0c0c]/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 md:px-8 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-white flex items-center justify-center font-bold text-black text-xs">ST</div>
+                <span class="font-semibold tracking-tight text-white hidden sm:block">Silent Tech</span>
+            </div>
+            
+            <!-- Global Real-Time Stats -->
+            <div class="flex items-center gap-4 md:gap-8">
+                <div class="flex flex-col items-end">
+                    <span class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Global Users</span>
+                    <span class="text-sm font-mono text-white flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                        <span id="stat-users">1,402</span>
+                    </span>
                 </div>
-                
-                <div class="p-6 space-y-5">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Authentication Key</label>
-                        <input type="password" id="test-key" value="SILENT_TECH_2026" class="w-full input-clean p-2.5 text-sm code-font">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Fetch Mode</label>
-                        <select id="test-mode" onchange="toggleIdInput()" class="w-full input-clean p-2.5 text-sm cursor-pointer">
-                            <option value="random">Randomize (Gacha Pull)</option>
-                            <option value="specific">Target Specific ID</option>
-                        </select>
-                    </div>
-
-                    <div id="id-input-container" class="hidden fade-in">
-                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Target Asset ID</label>
-                        <input type="text" id="test-id" placeholder="e.g. 61a7015099f..." class="w-full input-clean p-2.5 text-sm code-font">
-                    </div>
-
-                    <button onclick="executeTest()" id="execute-btn" class="w-full bg-[#ececec] hover:bg-white text-black font-semibold py-2.5 rounded-lg transition-colors mt-2 text-sm">
-                        Execute Request
-                    </button>
+                <div class="h-8 w-px bg-[#2a2a2a]"></div>
+                <div class="flex flex-col items-end">
+                    <span class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Total Requests</span>
+                    <span class="text-sm font-mono text-white" id="stat-reqs">8,492,031</span>
                 </div>
             </div>
         </div>
+    </nav>
 
-        <!-- Right Panel: Output & Render -->
-        <div class="md:col-span-7 flex flex-col gap-6">
-            
-            <!-- Code Window -->
-            <div class="mac-window h-fit">
-                <div class="mac-header">
-                    <div class="mac-dots">
-                        <div class="dot dot-red"></div>
-                        <div class="dot dot-yellow"></div>
-                        <div class="dot dot-green"></div>
+    <!-- Page Header & Tabs -->
+    <header class="max-w-6xl mx-auto w-full px-4 md:px-8 mt-12 mb-8">
+        <h1 class="text-3xl font-semibold text-white tracking-tight mb-6">Developer Dashboard</h1>
+        <div class="flex bg-[#111] border border-[#2a2a2a] p-1 rounded-lg w-fit">
+            <button onclick="switchTab('playground')" id="tab-playground" class="nav-btn active">Playground</button>
+            <button onclick="switchTab('docs')" id="tab-docs" class="nav-btn">Documentation</button>
+            <button onclick="switchTab('profile')" id="tab-profile" class="nav-btn">User Profile</button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-6xl mx-auto px-4 md:px-8 pb-20 z-10 flex-grow">
+        
+        <!-- 🟢 TAB 1: PLAYGROUND -->
+        <div id="view-playground" class="grid grid-cols-1 md:grid-cols-12 gap-8 fade-in">
+            <!-- Left Panel -->
+            <div class="md:col-span-5 flex flex-col gap-6">
+                <div class="mac-window">
+                    <div class="mac-header">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title">request_config.json</div>
                     </div>
-                    <div class="mac-title" id="response-status">Waiting for request...</div>
-                </div>
-                <div class="p-0 bg-[#0a0a0a]">
-                    <pre id="json-result" class="p-5 code-font text-sm text-gray-300 overflow-x-auto min-h-[160px] leading-relaxed">
-{
-  "status": "idle",
-  "connection": "ready"
-}</pre>
+                    <div class="p-6 space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Authentication Key</label>
+                            <input type="password" id="test-key" value="SILENT_TECH_2026" class="w-full input-clean p-2.5 text-sm code-font">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Fetch Mode</label>
+                            <select id="test-mode" onchange="toggleIdInput()" class="w-full input-clean p-2.5 text-sm cursor-pointer">
+                                <option value="random">Randomize (Gacha Pull)</option>
+                                <option value="specific">Target Specific ID</option>
+                            </select>
+                        </div>
+                        <div id="id-input-container" class="hidden fade-in">
+                            <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Target Asset ID</label>
+                            <input type="text" id="test-id" placeholder="e.g. 61a7015099f..." class="w-full input-clean p-2.5 text-sm code-font">
+                        </div>
+                        <button onclick="executeTest()" id="execute-btn" class="w-full bg-[#ececec] hover:bg-white text-black font-semibold py-2.5 rounded-lg transition-colors mt-2 text-sm">
+                            Execute Request
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Image Render Window -->
-            <div id="visual-render" class="mac-window hidden fade-in">
-                <div class="mac-header border-b border-[#2a2a2a]/50 bg-[#151515]">
-                    <div class="mac-dots">
-                        <div class="dot dot-red"></div>
-                        <div class="dot dot-yellow"></div>
-                        <div class="dot dot-green"></div>
+            <!-- Right Panel -->
+            <div class="md:col-span-7 flex flex-col gap-6">
+                <div class="mac-window h-fit">
+                    <div class="mac-header">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title" id="response-status">Waiting for request...</div>
                     </div>
-                    <div class="mac-title">asset_preview.png</div>
+                    <div class="p-0 bg-[#0a0a0a]">
+                        <pre id="json-result" class="p-5 code-font text-sm text-gray-300 overflow-x-auto min-h-[160px] leading-relaxed">{ "status": "idle" }</pre>
+                    </div>
                 </div>
-                
-                <div class="p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start bg-[#111]">
-                    <!-- Image -->
-                    <div class="w-40 h-60 rounded-lg overflow-hidden border border-[#333] shadow-lg flex-shrink-0 bg-[#0a0a0a]">
-                        <img id="render-img" src="" class="w-full h-full object-cover">
+
+                <div id="visual-render" class="mac-window hidden fade-in">
+                    <div class="mac-header border-b border-[#2a2a2a]/50 bg-[#151515]">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title">asset_preview.png</div>
                     </div>
-                    
-                    <!-- Metadata -->
-                    <div class="flex flex-col w-full py-2">
-                        <div class="text-[11px] text-gray-500 code-font mb-1" id="render-id"></div>
-                        <h2 class="text-2xl font-semibold text-white mb-1" id="render-name"></h2>
-                        <p class="text-sm text-gray-400 mb-5" id="render-series"></p>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-[#1a1a1a] rounded border border-[#2a2a2a] p-3">
-                                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Tier</div>
-                                <div class="text-sm font-medium text-white" id="render-tier"></div>
-                            </div>
-                            <div class="bg-[#1a1a1a] rounded border border-[#2a2a2a] p-3">
-                                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Maker</div>
-                                <div class="text-sm font-medium text-white" id="render-maker"></div>
+                    <div class="p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start bg-[#111]">
+                        <div class="w-40 h-60 rounded-lg overflow-hidden border border-[#333] shadow-lg flex-shrink-0 bg-[#0a0a0a]">
+                            <img id="render-img" src="" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex flex-col w-full py-2">
+                            <div class="text-[11px] text-gray-500 code-font mb-1" id="render-id"></div>
+                            <h2 class="text-2xl font-semibold text-white mb-1" id="render-name"></h2>
+                            <p class="text-sm text-gray-400 mb-5" id="render-series"></p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-[#1a1a1a] rounded border border-[#2a2a2a] p-3">
+                                    <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Tier</div>
+                                    <div class="text-sm font-medium text-white" id="render-tier"></div>
+                                </div>
+                                <div class="bg-[#1a1a1a] rounded border border-[#2a2a2a] p-3">
+                                    <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Maker</div>
+                                    <div class="text-sm font-medium text-white" id="render-maker"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
+
+        <!-- 🔵 TAB 2: DOCUMENTATION -->
+        <div id="view-docs" class="hidden fade-in grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div class="md:col-span-7 space-y-6">
+                <div class="mac-window p-8">
+                    <h2 class="text-2xl font-semibold mb-2">Endpoint Specifications</h2>
+                    <p class="text-gray-400 text-sm mb-6">REST API used for retrieving routed image data and metadata.</p>
+                    
+                    <div class="flex items-center bg-[#0a0a0a] border border-[#333] rounded-lg p-3 code-font text-sm mb-8">
+                        <span class="text-[#27c93f] font-bold mr-4">GET</span>
+                        <span class="text-gray-300">https://shoob-database-api.vercel.app/api/card</span>
+                    </div>
+
+                    <h3 class="text-lg font-semibold mb-4">Query Parameters</h3>
+                    <div class="border border-[#2a2a2a] rounded-lg overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <tr class="bg-[#1e1e1e] text-gray-400 border-b border-[#2a2a2a]">
+                                <th class="p-3 font-medium">Parameter</th>
+                                <th class="p-3 font-medium">Type</th>
+                                <th class="p-3 font-medium">Description</th>
+                            </tr>
+                            <tr class="border-b border-[#2a2a2a]">
+                                <td class="p-3 code-font text-[#ff7b72]">key</td>
+                                <td class="p-3 text-gray-400 code-font">string</td>
+                                <td class="p-3 text-gray-300">Auth key. (Required)</td>
+                            </tr>
+                            <tr class="border-b border-[#2a2a2a]">
+                                <td class="p-3 code-font text-[#79c0ff]">random</td>
+                                <td class="p-3 text-gray-400 code-font">boolean</td>
+                                <td class="p-3 text-gray-300">Returns a random asset.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 code-font text-[#79c0ff]">id</td>
+                                <td class="p-3 text-gray-400 code-font">string</td>
+                                <td class="p-3 text-gray-300">Fetch specific asset by ID.</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-5 space-y-6">
+                <div class="mac-window">
+                    <div class="mac-header"><div class="mac-dots"><div class="dot dot-red"></div></div><div class="mac-title">bot_integration.js</div></div>
+                    <pre class="p-5 code-font text-xs text-[#a5d6ff] bg-[#0a0a0a] leading-loose overflow-x-auto">
+<span class="text-[#ff7b72]">const</span> axios = <span class="text-[#d2a8ff]">require</span>('axios');
+
+<span class="text-[#ff7b72]">async function</span> <span class="text-[#d2a8ff]">fetchCard</span>() {
+  <span class="text-[#ff7b72]">const</span> res = <span class="text-[#ff7b72]">await</span> axios.get('https://.../api/card', {
+    params: { random: <span class="text-[#79c0ff]">true</span>, key: 'YOUR_KEY' }
+  });
+  <span class="text-gray-500">// Returns perfectly bypassed Image URL</span>
+  console.log(res.data.image); 
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🟣 TAB 3: USER PROFILE -->
+        <div id="view-profile" class="hidden fade-in grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="mac-window p-8">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#2a2a2a] to-[#444] border-2 border-[#333] flex items-center justify-center text-xl font-bold">U</div>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-white">Developer Account</h2>
+                        <p class="text-gray-400 text-sm">Enterprise Tier</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Your API Key</label>
+                        <div class="flex">
+                            <input type="password" value="SILENT_TECH_2026" readonly class="w-full input-clean p-2.5 text-sm code-font rounded-r-none border-r-0 text-gray-500">
+                            <button class="bg-[#1e1e1e] border border-[#333] px-4 rounded-r-lg hover:bg-[#2a2a2a] transition-colors text-sm">Copy</button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[#111] border border-[#2a2a2a] rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm font-medium text-white">Current Rate Limit</span>
+                            <span class="text-xs font-semibold text-[#27c93f] bg-[#27c93f]/10 px-2 py-0.5 rounded">Healthy</span>
+                        </div>
+                        <p class="text-xs text-gray-500">50 requests per second allowed.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mac-window p-8">
+                <h3 class="text-lg font-semibold mb-6">Monthly Usage Statistics</h3>
+                
+                <div class="space-y-2 mb-8">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-400">Requests Made</span>
+                        <span class="text-white font-mono"><span id="local-usage-text">0</span> <span class="text-gray-600">/ 100,000</span></span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" id="local-usage-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="border border-[#2a2a2a] rounded-lg p-4 bg-[#0a0a0a]">
+                        <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Data Transferred</p>
+                        <p class="text-lg font-mono text-white">14.2 GB</p>
+                    </div>
+                    <div class="border border-[#2a2a2a] rounded-lg p-4 bg-[#0a0a0a]">
+                        <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Cache Hit Rate</p>
+                        <p class="text-lg font-mono text-white">98.4%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script>
+        // Tab Navigation Logic
+        function switchTab(tabId) {
+            ['playground', 'docs', 'profile'].forEach(id => {
+                document.getElementById(`view-${id}`).classList.add('hidden');
+                document.getElementById(`tab-${id}`).classList.remove('active');
+            });
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // Playground Logic
         function toggleIdInput() {
             const mode = document.getElementById('test-mode').value;
-            if (mode === 'specific') {
-                document.getElementById('id-input-container').classList.remove('hidden');
-            } else {
-                document.getElementById('id-input-container').classList.add('hidden');
-            }
+            if (mode === 'specific') document.getElementById('id-input-container').classList.remove('hidden');
+            else document.getElementById('id-input-container').classList.add('hidden');
         }
 
         function syntaxHighlight(json) {
             if (typeof json != 'string') { json = JSON.stringify(json, undefined, 2); }
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                var cls = 'text-[#79c0ff]'; // number
+                var cls = 'text-[#79c0ff]';
                 if (/^"/.test(match)) {
-                    if (/:$/.test(match)) { cls = 'text-[#d2a8ff] font-medium'; } // key
-                    else { cls = 'text-[#a5d6ff]'; } // string
-                } else if (/true|false/.test(match)) { cls = 'text-[#ff7b72]'; } // boolean
-                else if (/null/.test(match)) { cls = 'text-gray-500'; } // null
+                    if (/:$/.test(match)) cls = 'text-[#d2a8ff] font-medium';
+                    else cls = 'text-[#a5d6ff]';
+                } else if (/true|false/.test(match)) cls = 'text-[#ff7b72]';
                 return '<span class="' + cls + '">' + match + '</span>';
             });
         }
+
+        // Global Real-Time Stats Simulator
+        let globalReqs = 8492031;
+        let globalUsers = 1402;
+        setInterval(() => {
+            globalReqs += Math.floor(Math.random() * 8);
+            document.getElementById('stat-reqs').innerText = globalReqs.toLocaleString();
+        }, 1200);
+        setInterval(() => {
+            if(Math.random() > 0.7) {
+                globalUsers += 1;
+                document.getElementById('stat-users').innerText = globalUsers.toLocaleString();
+            }
+        }, 5000);
+
+        // Local User Profile Usage Tracker
+        let localUsage = parseInt(localStorage.getItem('silent_usage')) || 1204;
+        function updateProfileUI() {
+            document.getElementById('local-usage-text').innerText = localUsage.toLocaleString();
+            let percentage = (localUsage / 100000) * 100;
+            document.getElementById('local-usage-bar').style.width = Math.min(percentage, 100) + '%';
+        }
+        updateProfileUI(); // Run on load
 
         async function executeTest() {
             const btn = document.getElementById('execute-btn');
@@ -224,13 +360,9 @@
             const cardId = document.getElementById('test-id').value;
 
             let url = window.location.origin + `/api/card?key=${encodeURIComponent(key)}`;
-            if (mode === 'random') {
-                url += `&random=true`;
-            } else {
-                if (!cardId) {
-                    jsonView.innerHTML = '<span class="text-[#ff7b72]">Error: Target ID is required.</span>';
-                    return;
-                }
+            if (mode === 'random') url += `&random=true`;
+            else {
+                if (!cardId) { jsonView.innerHTML = '<span class="text-[#ff7b72]">Error: Target ID required.</span>'; return; }
                 url += `&id=${encodeURIComponent(cardId)}`;
             }
             url += `&t=${Date.now()}`;
@@ -256,12 +388,13 @@
                     document.getElementById('render-maker').innerText = data.maker || 'Official';
                     document.getElementById('render-id').innerText = data.id;
                     
-                    // Smooth reveal
-                    setTimeout(() => {
-                        visualRender.classList.remove('hidden');
-                    }, 100);
-                }
+                    setTimeout(() => visualRender.classList.remove('hidden'), 100);
 
+                    // Increment local usage and save
+                    localUsage += 1;
+                    localStorage.setItem('silent_usage', localUsage);
+                    updateProfileUI();
+                }
             } catch (error) {
                 statusText.innerText = `NETWORK_ERROR`;
                 jsonView.innerHTML = `<span class="text-[#ff7b72]">${error.message}</span>`;
