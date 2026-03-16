@@ -299,16 +299,13 @@
 
     </main>
 
-    <!-- JS Logic -->
+        <!-- JS Logic -->
     <script>
-        // 🛡️ THE MASTER VERCEL PROXY BYPASS
-        // Routes the Shoob image through your newly created api/image.js file!
-        function getSafeImage(url) {
-            if (!url) return 'https://dummyimage.com/400x600/0f172a/10b981.png&text=No+Image';
+        // Use our own Vercel endpoint for the Marquee cards
+        function getProxyUrl(url) {
             return window.location.origin + `/api/image?url=${encodeURIComponent(url)}`;
         }
 
-        // Sample cards for the flowing marquee
         const sampleCards = [
             { name: "Eren Yeager", series: "Attack on Titan", tier: "TIER 1", img: "https://api.shoob.gg/site/api/cardr/60a1b2c3d4e5f60017a8b9c0?size=small" },
             { name: "Satoru Gojo", series: "Jujutsu Kaisen", tier: "TIER 1", img: "https://api.shoob.gg/site/api/cardr/603fe685c4946d0017e8011f?size=small" },
@@ -318,14 +315,12 @@
             { name: "Tuesday", series: "Carole & Tuesday", tier: "TIER 4", img: "https://api.shoob.gg/site/api/cardr/5db4fae2b0edd623625d2ad2?size=small" }
         ];
 
-        // Populate Marquee (Now using the Custom Proxy for images!)
         function buildMarquee() {
             let html = "";
             sampleCards.forEach(c => {
-                const safeImg = getSafeImage(c.img);
                 html += `
                 <div class="flow-card">
-                    <img src="${safeImg}" class="flow-img" onerror="this.src='https://dummyimage.com/100x100/0f172a/10b981.png&text=X'">
+                    <img src="${getProxyUrl(c.img)}" class="flow-img" onerror="this.style.display='none'">
                     <div class="flow-text">
                         <div class="flow-title">${c.name}</div>
                         <div class="flow-sub">${c.series}</div>
@@ -338,14 +333,11 @@
         }
         buildMarquee();
 
-        // Tab Switching
         function switchTab(tab) {
             document.getElementById('content-docs').classList.add('hidden');
             document.getElementById('content-test').classList.add('hidden');
-            
             document.getElementById('tab-docs').className = "px-6 py-2 rounded-md text-gray-400 hover:text-white font-semibold transition-all";
             document.getElementById('tab-test').className = "px-6 py-2 rounded-md text-gray-400 hover:text-white font-semibold transition-all";
-            
             document.getElementById(`content-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-${tab}`).className = "px-6 py-2 rounded-md bg-white/10 text-white font-semibold transition-all";
         }
@@ -359,22 +351,20 @@
             }
         }
 
-        // Syntax Highlighting for JSON
         function syntaxHighlight(json) {
             if (typeof json != 'string') { json = JSON.stringify(json, undefined, 2); }
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                var cls = 'text-blue-400'; // number
+                var cls = 'text-blue-400';
                 if (/^"/.test(match)) {
-                    if (/:$/.test(match)) { cls = 'text-pink-400'; } // key
-                    else { cls = 'text-green-300'; } // string
-                } else if (/true|false/.test(match)) { cls = 'text-purple-400'; } // boolean
-                else if (/null/.test(match)) { cls = 'text-gray-500'; } // null
+                    if (/:$/.test(match)) { cls = 'text-pink-400'; }
+                    else { cls = 'text-green-300'; }
+                } else if (/true|false/.test(match)) { cls = 'text-purple-400'; }
+                else if (/null/.test(match)) { cls = 'text-gray-500'; }
                 return '<span class="' + cls + '">' + match + '</span>';
             });
         }
 
-        // Live API Execution
         async function executeTest() {
             const btn = document.getElementById('execute-btn');
             const statusText = document.getElementById('response-status');
@@ -385,57 +375,45 @@
             const mode = document.getElementById('test-mode').value;
             const cardId = document.getElementById('test-id').value;
 
-            // Build URL
             let url = window.location.origin + `/api/card?key=${encodeURIComponent(key)}`;
-            if (mode === 'random') {
-                url += `&random=true`;
-            } else {
-                if (!cardId) {
-                    jsonView.innerHTML = '<span class="text-red-400">Error: Please enter a Card ID for specific mode.</span>';
-                    return;
-                }
+            if (mode === 'random') { url += `&random=true`; } 
+            else {
+                if (!cardId) { jsonView.innerHTML = '<span class="text-red-400">Error: Please enter a Card ID.</span>'; return; }
                 url += `&id=${encodeURIComponent(cardId)}`;
             }
 
-            // Cache buster for live testing
             url += `&t=${Date.now()}`;
 
             btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Fetching...`;
             visualRender.classList.add('hidden');
-            jsonView.innerHTML = '<span class="text-gray-500">Connecting to server...</span>';
+            jsonView.innerHTML = '<span class="text-gray-500">Connecting...</span>';
             statusText.innerText = "HTTP_REQ " + url;
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
                 
-                statusText.innerHTML = response.ok 
-                    ? `<span class="text-green-400">HTTP 200 OK</span>` 
-                    : `<span class="text-red-400">HTTP ${response.status} ERROR</span>`;
-
-                // Display JSON
+                statusText.innerHTML = response.ok ? `<span class="text-green-400">HTTP 200 OK</span>` : `<span class="text-red-400">HTTP ${response.status} ERROR</span>`;
                 jsonView.innerHTML = syntaxHighlight(data);
 
-                // If success and has image, display Visual Render using PROXY!
                 if (response.ok && data.image) {
-                    document.getElementById('render-img').src = getSafeImage(data.image);
-                    
+                    // Because api/card.js now returns the Vercel proxy link, we just plug it straight in!
+                    document.getElementById('render-img').src = data.image;
                     document.getElementById('render-name').innerText = data.name;
                     document.getElementById('render-series').innerText = data.series;
                     document.getElementById('render-tier').innerText = data.tier;
                     document.getElementById('render-maker').innerText = data.maker || 'Official';
                     document.getElementById('render-id').innerText = data.id;
-                    
                     visualRender.classList.remove('hidden');
                 }
-
             } catch (error) {
                 statusText.innerHTML = `<span class="text-red-400">NETWORK_ERROR</span>`;
                 jsonView.innerHTML = `<span class="text-red-400">${error.message}</span>`;
             }
-
             btn.innerHTML = `<span>Execute Request</span>`;
         }
     </script>
+    
+                            
 </body>
 </html>
