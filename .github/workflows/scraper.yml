@@ -1,0 +1,32 @@
+name: Cloud Database Builder
+
+on:
+  workflow_dispatch: # This adds a manual "Run" button on GitHub!
+
+jobs:
+  build-database:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth
+
+      - name: Run Master Scraper (2000 cards per batch)
+        run: node master_scraper.js
+
+      - name: Auto-Save to GitHub
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "action@github.com"
+          git add master_database.json || true
+          git commit -m "💾 Auto-saved new batch of cards" || true
+          git push || true
