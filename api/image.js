@@ -20,40 +20,44 @@ export default async function handler(req, res) {
 
     const targetUrl = `https://api.shoob.gg/site/api/cardr/${id}?size=400`;
 
-    // 🔄 Auto-Retry Loop: Try up to 3 different proxies just in case one is offline!
     for (let i = 0; i < 3; i++) {
         const randomProxy = proxies[Math.floor(Math.random() * proxies.length)];
         const agent = new HttpsProxyAgent(randomProxy);
 
         try {
-            // We use GET but tell Axios NOT to follow the redirect (maxRedirects: 0)
-            // This forces Cloudflare to hand over the secret cdn.shoob.gg link instantly!
+            // Tell Axios to grab the raw data, and accept BOTH 200 (Image) and 302 (Redirect)
             const response = await axios.get(targetUrl, {
                 httpsAgent: agent,
                 maxRedirects: 0, 
-                timeout: 4000, // 4 seconds max per proxy, keeps it blazing fast
-                validateStatus: status => status >= 200 && status < 400,
+                responseType: 'arraybuffer', // Ready to catch the image buffer!
+                timeout: 6000, 
+                validateStatus: status => status >= 200 && status <= 308,
                 headers: { 
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                    'Referer': 'https://shoob.gg/'
                 }
             });
 
-            // Grab the CDN link from the redirect headers
-            const cdnUrl = response.headers.location;
-
-            if (cdnUrl) {
-                // SUCCESS! Cache this on Vercel for 30 days so we never have to ask Shoob again
+            // SCENARIO 1: Shoob hands us a redirect to the CDN
+            if (response.status >= 300 && response.headers.location) {
                 res.setHeader('Cache-Control', 'public, max-age=2592000');
-                // Redirect the user/bot straight to the working image!
-                return res.redirect(302, cdnUrl);
+                return res.redirect(302, response.headers.location);
             }
+
+            // SCENARIO 2: Shoob hands us the image file directly
+            if (response.status === 200) {
+                res.setHeader('Cache-Control', 'public, max-age=2592000');
+                res.setHeader('Content-Type', response.headers['content-type'] || 'image/png');
+                return res.status(200).send(Buffer.from(response.data));
+            }
+
         } catch (err) {
             console.error(`Proxy ${randomProxy} failed. Retrying...`);
-            continue; // Immediately try the next proxy in the loop
+            continue; 
         }
     }
 
-    // If all 3 proxies timeout, show a clean error image instead of breaking the JSON
-    res.redirect(302, 'https://dummyimage.com/400x600/0f172a/ef4444.png&text=Proxy+Timeout+Retry');
+    // Failsafe if everything burns down
+    res.redirect(302, 'https://dummyimage.com/400x600/0f172a/ef4444.png&text=Proxy+Failed');
 }
