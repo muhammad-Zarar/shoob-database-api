@@ -1,7 +1,6 @@
 const axios = require('axios');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
-// Your 10 Premium Proxies (Formatted for the agent)
 const proxies = [
     "http://daknlrlb:sfpf7jrfkxta@31.59.20.176:6754",
     "http://daknlrlb:sfpf7jrfkxta@23.95.150.145:6114",
@@ -17,35 +16,44 @@ const proxies = [
 
 export default async function handler(req, res) {
     const { id } = req.query;
-    if (!id) return res.status(400).send("No Card ID provided");
+    if (!id) return res.status(400).send("No ID");
 
-    // The target URL that throws Cloudflare errors for normal bots
     const targetUrl = `https://api.shoob.gg/site/api/cardr/${id}?size=400`;
-    
-    // Pick a random proxy from your pool
-    const randomProxy = proxies[Math.floor(Math.random() * proxies.length)];
-    const agent = new HttpsProxyAgent(randomProxy);
 
-    try {
-        // Fetch the image through the proxy (automatically follows redirects)
-        const response = await axios.get(targetUrl, {
-            httpsAgent: agent,
-            responseType: 'arraybuffer', // Get the raw image data
-            timeout: 15000,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'image/png,image/jpeg,image/*,*/*;q=0.8'
+    // 🔄 Auto-Retry Loop: Try up to 3 different proxies just in case one is offline!
+    for (let i = 0; i < 3; i++) {
+        const randomProxy = proxies[Math.floor(Math.random() * proxies.length)];
+        const agent = new HttpsProxyAgent(randomProxy);
+
+        try {
+            // We use GET but tell Axios NOT to follow the redirect (maxRedirects: 0)
+            // This forces Cloudflare to hand over the secret cdn.shoob.gg link instantly!
+            const response = await axios.get(targetUrl, {
+                httpsAgent: agent,
+                maxRedirects: 0, 
+                timeout: 4000, // 4 seconds max per proxy, keeps it blazing fast
+                validateStatus: status => status >= 200 && status < 400,
+                headers: { 
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
+                }
+            });
+
+            // Grab the CDN link from the redirect headers
+            const cdnUrl = response.headers.location;
+
+            if (cdnUrl) {
+                // SUCCESS! Cache this on Vercel for 30 days so we never have to ask Shoob again
+                res.setHeader('Cache-Control', 'public, max-age=2592000');
+                // Redirect the user/bot straight to the working image!
+                return res.redirect(302, cdnUrl);
             }
-        });
-
-        // Serve the image buffer directly to whoever asked for it (WhatsApp/HTML)
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache it for 24 hours so we don't waste proxies!
-        res.status(200).send(Buffer.from(response.data));
-
-    } catch (error) {
-        console.error("Proxy fetch failed:", error.message);
-        // Fallback: If the proxy fails, send a tiny transparent pixel or error image so WhatsApp doesn't crash
-        res.status(500).send("Image fetch failed");
+        } catch (err) {
+            console.error(`Proxy ${randomProxy} failed. Retrying...`);
+            continue; // Immediately try the next proxy in the loop
+        }
     }
+
+    // If all 3 proxies timeout, show a clean error image instead of breaking the JSON
+    res.redirect(302, 'https://dummyimage.com/400x600/0f172a/ef4444.png&text=Proxy+Timeout+Retry');
 }
