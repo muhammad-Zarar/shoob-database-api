@@ -28,13 +28,14 @@ export default function handler(req, res) {
     }
 
     if (card) {
-        // 🛡️ THE BYPASS: We wrap Shoob's raw image link in a proxy so it never says "Bad Request"!
-        // We use a clone object so we don't accidentally modify the master database in RAM.
         const safeCard = { ...card }; 
-        safeCard.raw_image = card.image; // Keep the original just in case the bot needs it
+        safeCard.raw_image = card.image; // Keep original for WhatsApp bot
         
-        // Wrap it in weserv proxy to bypass Shoob's 400 Bad Request blocker
-        safeCard.image = `https://images.weserv.nl/?url=${encodeURIComponent(card.image)}&output=webp`;
+        // 🔥 Point to YOUR custom Vercel proxy, NOT weserv!
+        const host = req.headers['x-forwarded-host'] || req.headers.host;
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        
+        safeCard.image = `${protocol}://${host}/api/image?url=${encodeURIComponent(card.image)}`;
 
         res.status(200).json(safeCard);
     } else {
