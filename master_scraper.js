@@ -28,7 +28,7 @@ puppeteer.use(StealthPlugin());
     }
 
     // 🔥 LIMIT TO 2000 PER RUN SO GITHUB CAN SAVE SAFELY!
-    const BATCH_LIMIT = Math.min(pendingIds.length, 2000);
+    const BATCH_LIMIT = Math.min(pendingIds.length, 8000);
     const targetIds = pendingIds.slice(0, BATCH_LIMIT);
 
     const browser = await puppeteer.launch({
@@ -36,7 +36,7 @@ puppeteer.use(StealthPlugin());
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
 
-    const CONCURRENCY = 10; // GitHub servers have 7GB RAM! We can do 10 tabs safely.
+    const CONCURRENCY = 20; // GitHub servers have 7GB RAM! We can do 10 tabs safely.
 
     for (let i = 0; i < targetIds.length; i += CONCURRENCY) {
         let promises = [];
