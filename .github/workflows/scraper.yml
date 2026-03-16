@@ -1,7 +1,9 @@
 name: Cloud Database Builder
 
 on:
-  workflow_dispatch: # This adds a manual "Run" button on GitHub!
+  workflow_dispatch:
+  push:
+    branches: [ "master", "main" ] # This adds a manual "Run" button on GitHub!
 
 jobs:
   build-database:
