@@ -299,8 +299,18 @@
 
     </main>
 
-    <!-- JS Logic -->
+        <!-- JS Logic -->
     <script>
+        // 🛡️ IMAGE PROXY BYPASS FUNCTION
+        // This forces all Shoob images through a proxy so they never get a 400 Bad Request!
+        function getSafeImage(url) {
+            if (!url) return 'https://i.ibb.co/30xZLXQ/default-pfp.jpg';
+            // If it's already using a proxy, return it.
+            if (url.includes('weserv.nl')) return url;
+            // Otherwise, wrap the Shoob URL in the bypass proxy.
+            return `https://images.weserv.nl/?url=${encodeURIComponent(url)}&output=webp`;
+        }
+
         // Sample cards for the flowing marquee
         const sampleCards = [
             { name: "Eren Yeager", series: "Attack on Titan", tier: "TIER 1", img: "https://api.shoob.gg/site/api/cardr/60a1b2c3d4e5f60017a8b9c0?size=small" },
@@ -315,9 +325,10 @@
         function buildMarquee() {
             let html = "";
             sampleCards.forEach(c => {
+                const safeImg = getSafeImage(c.img);
                 html += `
                 <div class="flow-card">
-                    <img src="${c.img}" class="flow-img" onerror="this.src='https://i.ibb.co/30xZLXQ/default-pfp.jpg'">
+                    <img src="${safeImg}" class="flow-img" onerror="this.src='https://i.ibb.co/30xZLXQ/default-pfp.jpg'">
                     <div class="flow-text">
                         <div class="flow-title">${c.name}</div>
                         <div class="flow-sub">${c.series}</div>
@@ -410,7 +421,9 @@
 
                 // If success and has image, display Visual Render
                 if (response.ok && data.image) {
-                    document.getElementById('render-img').src = data.image;
+                    // Use the proxy bypass to load the image safely in the HTML!
+                    document.getElementById('render-img').src = getSafeImage(data.image);
+                    
                     document.getElementById('render-name').innerText = data.name;
                     document.getElementById('render-series').innerText = data.series;
                     document.getElementById('render-tier').innerText = data.tier;
