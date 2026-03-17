@@ -69,6 +69,7 @@ class handler(BaseHTTPRequestHandler):
                 "creator": "Muhammad Zarar",
                 "status": 200,
                 "success": True,
+                "note": "Most videos download without extra steps. For rare protected or popular videos, YouTube may block access and cookies would be required.",
                 "result": {
                     "type": media_type,
                     "format": fmt,
@@ -79,9 +80,37 @@ class handler(BaseHTTPRequestHandler):
                 }
             })
         except Exception as e:
-            self._send_json(500, {
-                "creator": "Muhammad Zarar",
-                "status": 500,
-                "success": False,
-                "error": str(e)
-            })
+            error_msg = str(e)
+            bot_protection_phrases = [
+                'sign in to confirm',
+                'sign in to access',
+                'sign in to watch',
+                'requires sign-in',
+                'requires authentication',
+                'cookies required',
+                'age-restricted',
+                'age restricted',
+                'confirm your age',
+                'members only',
+                'private video',
+                'this video is private',
+            ]
+            is_bot_protected = any(phrase in error_msg.lower() for phrase in bot_protection_phrases)
+
+            if is_bot_protected:
+                self._send_json(403, {
+                    "creator": "Muhammad Zarar",
+                    "status": 403,
+                    "success": False,
+                    "cookies_required": True,
+                    "error": "YouTube requires sign-in for this content. This cannot be bypassed in code. If cookies are not provided, download will not work.",
+                    "reason": "This restriction is due to YouTube's bot protection. We are not able to bypass it automatically.",
+                    "original_error": error_msg
+                })
+            else:
+                self._send_json(500, {
+                    "creator": "Muhammad Zarar",
+                    "status": 500,
+                    "success": False,
+                    "error": error_msg
+                })
