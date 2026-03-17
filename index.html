@@ -114,6 +114,7 @@
             <button onclick="switchTab('playground')" id="tab-playground" class="nav-btn active">Playground</button>
             <button onclick="switchTab('docs')" id="tab-docs" class="nav-btn">Documentation</button>
             <button onclick="switchTab('profile')" id="tab-profile" class="nav-btn">User Profile</button>
+            <button onclick="switchTab('ytdl')" id="tab-ytdl" class="nav-btn">YT Downloader</button>
         </div>
     </header>
 
@@ -337,6 +338,96 @@
             </div>
         </div>
 
+        <!-- 🔴 TAB 4: YOUTUBE DOWNLOADER -->
+        <div id="view-ytdl" class="hidden fade-in grid grid-cols-1 md:grid-cols-12 gap-8">
+            <!-- Left Panel: Config -->
+            <div class="md:col-span-5 flex flex-col gap-6">
+                <div class="mac-window">
+                    <div class="mac-header">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title">yt_downloader.config</div>
+                    </div>
+                    <div class="p-6 space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">YouTube URL</label>
+                            <input type="url" id="yt-url" placeholder="https://youtube.com/watch?v=..." class="w-full input-clean p-2.5 text-sm code-font">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Media Type</label>
+                            <select id="yt-type" class="w-full input-clean p-2.5 text-sm cursor-pointer">
+                                <option value="video">Video (MP4)</option>
+                                <option value="audio">Audio (M4A)</option>
+                            </select>
+                        </div>
+                        <button onclick="fetchYtDownload()" id="yt-btn" class="w-full bg-[#ececec] hover:bg-white text-black font-semibold py-2.5 rounded-lg transition-colors mt-2 text-sm">
+                            Get Download Link
+                        </button>
+                        <p class="text-xs text-gray-600 text-center">Powered by yt-dlp &bull; Links may expire</p>
+                    </div>
+                </div>
+
+                <div class="mac-window p-5">
+                    <div class="text-xs text-gray-500 uppercase tracking-widest mb-3 font-semibold">API Endpoint</div>
+                    <div class="flex items-center bg-[#0a0a0a] border border-[#333] rounded-lg p-2.5 code-font text-xs mb-3">
+                        <span class="text-[#27c93f] font-bold mr-3">GET</span>
+                        <span class="text-gray-400 truncate">/api/download?url=...&amp;type=video</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-600">
+                        <span class="text-[#79c0ff]">type</span>
+                        <span>=</span>
+                        <span class="text-[#a5d6ff]">video</span>
+                        <span class="mx-1">|</span>
+                        <span class="text-[#a5d6ff]">audio</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="md:col-span-7 flex flex-col gap-6">
+                <div class="mac-window h-fit">
+                    <div class="mac-header">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title" id="yt-status">Waiting for request...</div>
+                    </div>
+                    <div class="p-0 bg-[#0a0a0a]">
+                        <pre id="yt-json-result" class="p-5 code-font text-sm text-gray-300 overflow-x-auto min-h-[160px] leading-relaxed">{ "status": "idle" }</pre>
+                    </div>
+                </div>
+
+                <div id="yt-result-card" class="mac-window hidden fade-in">
+                    <div class="mac-header border-b border-[#2a2a2a]/50">
+                        <div class="mac-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+                        <div class="mac-title">download_ready</div>
+                    </div>
+                    <div class="p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start bg-[#111]">
+                        <div class="w-40 h-24 rounded-lg overflow-hidden border border-[#333] shadow-lg flex-shrink-0 bg-[#0a0a0a]">
+                            <img id="yt-thumbnail" src="" alt="thumbnail" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex flex-col w-full py-1 gap-3">
+                            <div>
+                                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Title</div>
+                                <h3 class="text-sm font-semibold text-white leading-snug" id="yt-title"></h3>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="bg-[#1a1a1a] rounded border border-[#2a2a2a] p-2 flex-1">
+                                    <div class="text-[10px] text-gray-500 uppercase mb-0.5">Format</div>
+                                    <div class="text-xs font-medium text-white code-font" id="yt-format"></div>
+                                </div>
+                                <div class="bg-[#1a1a1a] rounded border border-[#2a2a2a] p-2 flex-1">
+                                    <div class="text-[10px] text-gray-500 uppercase mb-0.5">Quality</div>
+                                    <div class="text-xs font-medium text-white code-font" id="yt-quality"></div>
+                                </div>
+                            </div>
+                            <a id="yt-download-link" href="#" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2 bg-[#ececec] hover:bg-white text-black font-semibold py-2 rounded-lg text-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Open Download Link
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Global Footer -->
@@ -356,7 +447,7 @@
     <script>
         // Tab Navigation Logic
         function switchTab(tabId) {
-            ['playground', 'docs', 'profile'].forEach(id => {
+            ['playground', 'docs', 'profile', 'ytdl'].forEach(id => {
                 document.getElementById(`view-${id}`).classList.add('hidden');
                 document.getElementById(`tab-${id}`).classList.remove('active');
             });
@@ -459,6 +550,52 @@
             }
 
             btn.innerText = "Execute Request";
+            btn.classList.remove('opacity-70');
+        }
+        // YouTube Downloader Logic
+        async function fetchYtDownload() {
+            const btn = document.getElementById('yt-btn');
+            const statusText = document.getElementById('yt-status');
+            const jsonView = document.getElementById('yt-json-result');
+            const resultCard = document.getElementById('yt-result-card');
+
+            const url = document.getElementById('yt-url').value.trim();
+            const type = document.getElementById('yt-type').value;
+
+            if (!url) {
+                jsonView.innerHTML = '<span class="text-[#ff7b72]">Error: Please enter a YouTube URL.</span>';
+                return;
+            }
+
+            btn.innerText = 'Fetching...';
+            btn.classList.add('opacity-70');
+            resultCard.classList.add('hidden');
+            jsonView.innerHTML = '<span class="text-gray-500">Extracting download link...</span>';
+            statusText.innerText = 'GET /api/download';
+
+            try {
+                const apiUrl = `${window.location.origin}/api/download?url=${encodeURIComponent(url)}&type=${encodeURIComponent(type)}`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                statusText.innerText = data.success ? 'Status: 200 OK' : `Status: ${data.status} ERROR`;
+                jsonView.innerHTML = syntaxHighlight(data);
+
+                if (data.success && data.result) {
+                    const r = data.result;
+                    document.getElementById('yt-thumbnail').src = r.thumbnail || '';
+                    document.getElementById('yt-title').innerText = r.title || 'Unknown Title';
+                    document.getElementById('yt-format').innerText = r.format ? r.format.toUpperCase() : '';
+                    document.getElementById('yt-quality').innerText = r.quality || '';
+                    document.getElementById('yt-download-link').href = r.download_url || '#';
+                    setTimeout(() => resultCard.classList.remove('hidden'), 100);
+                }
+            } catch (error) {
+                statusText.innerText = 'NETWORK_ERROR';
+                jsonView.innerHTML = `<span class="text-[#ff7b72]">${error.message}</span>`;
+            }
+
+            btn.innerText = 'Get Download Link';
             btn.classList.remove('opacity-70');
         }
     </script>
