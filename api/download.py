@@ -27,6 +27,8 @@ class handler(BaseHTTPRequestHandler):
 
         url = params.get('url', [None])[0]
         media_type = params.get('type', ['video'])[0].lower()
+        cookies_param = params.get('cookies', [None])[0]
+
         if media_type not in ('video', 'audio'):
             media_type = 'video'
 
@@ -38,6 +40,19 @@ class handler(BaseHTTPRequestHandler):
                 "error": "No URL provided. Use ?url=YOUTUBE_URL"
             })
             return
+
+        # Parse optional cookies: accepts JSON object or raw "name=value; name2=value2" string
+        cookie_header = None
+        if cookies_param:
+            try:
+                cookie_dict = json.loads(cookies_param)
+                if isinstance(cookie_dict, dict):
+                    cookie_header = '; '.join(f'{k}={v}' for k, v in cookie_dict.items())
+                else:
+                    # Non-dict JSON (e.g. a list) – fall back to treating as raw string
+                    cookie_header = cookies_param
+            except (json.JSONDecodeError, ValueError):
+                cookie_header = cookies_param
 
         try:
             if media_type == 'audio':
@@ -52,6 +67,9 @@ class handler(BaseHTTPRequestHandler):
                     'quiet': True,
                     'no_warnings': True,
                 }
+
+            if cookie_header:
+                ydl_opts['http_headers'] = {'Cookie': cookie_header}
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -79,9 +97,22 @@ class handler(BaseHTTPRequestHandler):
                 }
             })
         except Exception as e:
-            self._send_json(500, {
+            error_payload = {
                 "creator": "Muhammad Zarar",
                 "status": 500,
                 "success": False,
-                "error": str(e)
-            })
+                "error": str(e),
+            }
+            if not cookies_param:
+                error_lower = str(e).lower()
+                auth_keywords = ('sign in', 'signin', 'bot', 'cookie', '403', 'age-restricted',
+                                 'age restricted', 'confirm your age', 'private video',
+                                 'video unavailable')
+                if any(kw in error_lower for kw in auth_keywords):
+                    error_payload["hint"] = (
+                        "Authentication cookies may be required for this video to bypass bot "
+                        "detection. Pass your YouTube cookies via the ?cookies= parameter as a "
+                        "JSON object or a raw 'name=value; name2=value2' string. "
+                        "See: https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp"
+                    )
+            self._send_json(500, error_payload)
