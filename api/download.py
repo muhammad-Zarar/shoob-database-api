@@ -3,6 +3,32 @@ from urllib.parse import urlparse, parse_qs
 import json
 import yt_dlp
 
+# Bypass YouTube bot-protection by using mobile/embedded player clients.
+# Android and iOS clients hit a different internal API (youtubei.googleapis.com)
+# that does not enforce the same Proof-of-Origin / sign-in requirement that the
+# standard web player uses.  tv_embedded / web_embedded are additional fallbacks.
+_BYPASS_EXTRACTOR_ARGS = {
+    'youtube': {
+        'player_client': ['android', 'ios', 'tv_embedded', 'web_embedded'],
+    }
+}
+
+_BASE_OPTS = {
+    'quiet': True,
+    'no_warnings': True,
+    'extractor_args': _BYPASS_EXTRACTOR_ARGS,
+    'socket_timeout': 30,
+    'retries': 3,
+}
+
+_BOT_KEYWORDS = ('sign in to confirm', "you're not a bot", 'bot detection',
+                 'proof of origin', 'po token', 'cookies')
+
+
+def _is_bot_error(msg: str) -> bool:
+    lower = msg.lower()
+    return any(kw in lower for kw in _BOT_KEYWORDS)
+
 
 class handler(BaseHTTPRequestHandler):
 
@@ -42,15 +68,13 @@ class handler(BaseHTTPRequestHandler):
         try:
             if media_type == 'audio':
                 ydl_opts = {
+                    **_BASE_OPTS,
                     'format': 'bestaudio[ext=m4a]/bestaudio/best',
-                    'quiet': True,
-                    'no_warnings': True,
                 }
             else:
                 ydl_opts = {
+                    **_BASE_OPTS,
                     'format': 'best[ext=mp4]/best',
-                    'quiet': True,
-                    'no_warnings': True,
                 }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -79,9 +103,19 @@ class handler(BaseHTTPRequestHandler):
                 }
             })
         except Exception as e:
+            err_msg = str(e)
+            if _is_bot_error(err_msg):
+                err_msg = (
+                    "YouTube is blocking this request even after trying Android, iOS, "
+                    "TV-Embedded, and Web-Embedded player clients. "
+                    "Technical reason: YouTube enforces a server-side Proof-of-Origin (PO) "
+                    "token for this video that can only be obtained from a real logged-in "
+                    "browser session. No fully server-side bypass exists for such videos "
+                    "without cookies. This is a YouTube platform restriction."
+                )
             self._send_json(500, {
                 "creator": "Muhammad Zarar",
                 "status": 500,
                 "success": False,
-                "error": str(e)
+                "error": err_msg
             })
